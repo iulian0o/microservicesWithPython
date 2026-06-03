@@ -4,9 +4,9 @@
 
 # Module 1 — Reflection
 
-**Team name**: **\*\***\_\_\_**\*\***
-**Branch**: `module-01/<team-name>`
-**Submitted**: before Module 2 lesson
+**Team name**: **Iulian - just me**
+**Branch**: `module-01/iulian`
+**Submitted**: Unfortuneltey a bit late 👉👈
 
 ---
 
@@ -22,8 +22,17 @@ You started from a painful monolith. Now you're splitting it into separate servi
 
 Think about it from three angles: the developer who has to change code, the team that has to deploy it, and the user who has to live with its failures. You don't need to cover all three, pick the one that felt most real to you today.
 
-> _Your answer:_
+```
+It solves a problem for the developer who has to change code.
 
+In a monolith, changing the logging logic means opening the same codebase
+that handles login, games, and notifications. You risk breaking something
+unrelated every time you deploy.
+
+With separate services, you change one thing, deploy one thing, and nothing
+else is at risk.
+
+```
 ---
 
 ## 2. Your choice
@@ -34,7 +43,16 @@ Look at your service map. Every arrow between two services is a decision someone
 
 What would break, slow down, or become harder to manage if you merged those two services back together?
 
-> _Your answer:_
+``` 
+The line between activity-service and logging-service.
+
+They both deal with what users do, but for completely different reasons.
+activity-service powers the social feed. logging-service exists because of
+GDPR — it has to check consent before writing anything down.
+
+If I merged them, a bug in the feed logic could accidentally bypass the
+consent check. Two very different responsibilities tangled in one place.
+```
 
 ---
 
@@ -46,7 +64,17 @@ Microservices solve the monolith's problems. But they create new ones.
 
 No need to solve it: just name it honestly. This is exactly the tension the rest of the course is about.
 
-> _Your answer:_
+```
+In the monolith, "did this user consent AND what did they play today" is
+one SQL query joining two tables.
+
+In the distributed design, that data lives in two separate services that
+cannot touch each other's database. A simple question became a distributed
+systems problem.
+
+I don't have a solution yet — I think that's what the rest of the course
+is for.
+```
 
 ---
 

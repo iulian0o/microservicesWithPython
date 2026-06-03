@@ -105,7 +105,7 @@ This can be a sketch on paper, a whiteboard photo, or ASCII art committed to you
 
 Three questions to discuss as a team before you leave:
 
-'''
+```
 1. Why does `notification-service` use Node.js instead of Python like the rest? What does that tell you about microservices and technology choices?
 
 - Because microservices have the best tools fot your job. Notification delivery involves holding many open connections and Node.js has the event loop (we did this in Server-side JS) which was built for this. Python would work, but Node.js is more natural here. The key insight is that services are isolated enough that a different language in one place doesn't contaminate the others.
@@ -119,7 +119,7 @@ Three questions to discuss as a team before you leave:
 
 - EU law requires that you have the user's explicit consent before tracking their behavior (GDPR class). If you record first and check later, you've already violated the regulation. Logging-service is the gatekeeper: it receives the activity event, checks its own consent table for that user, and only writes the record if consent exists. The consent data lives in logging-service's database and nobody else owns it.
 
-'''
+```
 You do not need to write these answers down — they are warm-up for your REFLECTION.md.
 
 ---
@@ -129,7 +129,7 @@ You do not need to write these answers down — they are warm-up for your REFLEC
 - [x] Bounded context table filled in (at least 4 services justified)
 - [x] At least 3 service contracts defined
 - [x] Service map committed (sketch, photo, or ASCII)
-- [ ] `REFLECTION.md` completed and committed
+- [x] `REFLECTION.md` completed and committed
 
 The map does not need to be perfect. It needs to be yours.
 
