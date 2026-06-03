@@ -19,15 +19,21 @@
 # See the README for the full implementation.
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app import repository
 from app.schemas import UserCreate, UserOut, UserList
+from fastapi import HTTPException
 
 def _hash_password(plain: str) -> str:
     return plain + "_hashed"
 
 def add_user(db: Session, data: UserCreate) -> UserOut:
     hashed = _hash_password(data.password)
-    user = repository.create_user(db, data, hashed)
+    try:
+        user = repository.create_user(db, data, hashed)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Username or email already exists")
     return UserOut.model_validate(user)
 
 def fetch_user(db: Session, user_id: str) -> UserOut:
