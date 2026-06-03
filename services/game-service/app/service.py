@@ -11,11 +11,22 @@
 
 from sqlalchemy.orm import Session
 from app import repository
+from sqlalchemy.exc import IntegrityError
 from app.schemas import GameCreate, GameOut, GameList
+from fastapi import HTTPException
 
 def add_game(db: Session, data: GameCreate) -> GameOut:
     game = repository.create_game(db, data)
     return GameOut.model_validate(game)
+
+def add_user(db: Session, data: GameCreate) -> GameOut:
+    game = repository.create_game(db, data)
+    try:
+        user = repository.create_user(db, data, game)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Username or email already exists")
+    return GameOut.model_validate(user)
 
 def fetch_game(db: Session, game_id: str) -> GameOut:
     game = repository.get_game(db, game_id)
