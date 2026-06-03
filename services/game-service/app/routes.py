@@ -23,11 +23,11 @@ def create_game(data: schemas.GameCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=schemas.GameList)
 def list_games(limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
-    return service.fetch_all_game(db, limit=limit, offset=offset)
+    return service.fetch_all_games(db, limit=limit, offset=offset)
 
 @router.get("/search", response_model=schemas.GameList)
 def search_games(q: str, limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
-    return service.find_games(db, limit=limit, offset=offset)
+    return service.find_games(db, q=q, limit=limit, offset=offset)
 
 @router.get("/{game_id}", response_model=schemas.GameOut)
 def get_game(game_id: str, db: Session = Depends(get_db)):
