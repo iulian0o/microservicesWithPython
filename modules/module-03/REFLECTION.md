@@ -1,8 +1,8 @@
 # Module 3 — Reflection
 
-**Team name**: _______________
-**Branch**: `module-03/<team-name>`
-**Submitted**: before Module 4 lesson
+**Team name**: Just me
+**Branch**: `module-03/iulian`
+**Submitted**: After Module 4 lesson unfortunetley 👉👈
 
 ---
 
@@ -18,7 +18,8 @@ All client requests now go through the gateway. No client ever calls a service d
 
 Think about what the client would need to know and manage if it talked to each service on its own port.
 
-> *Your answer:*
+> *Your answer:* The gateway gives the client a single address to talk to instead of having to know the port and location of every service. Without it the client would need to track which service lives where, handle each service's errors separately, and update its own config every time a service moves or a new one is added.
+
 
 ---
 
@@ -30,7 +31,8 @@ The activity-service makes two outbound calls: one to validate the user (with re
 
 What is the consequence for the user in each case if the downstream service is unavailable?
 
-> *Your answer:*
+> *Your answer:* User validation is a hard requirement and if the user does not exist the activity must not be saved, so it is worth retrying on a transient failure before rejecting the request. Game enrichment is optional, the activity is still valid without it, so a failure just returns null and the user loses the game details but keeps their activity. Retrying enrichment would only slow the response for data that is not critical.
+
 
 ---
 
@@ -42,7 +44,7 @@ Every time a client creates an activity, three services are involved synchronous
 
 What happens to the user experience if the slowest service in the chain takes 3 seconds to respond?
 
-> *Your answer:*
+> *Your answer:* If any service in the chain is slow or down the entire request stalls waiting for it. If user-service takes 3 seconds every activity creation takes at least 3 seconds, which the user feels directly as a slow response. One unhealthy service can degrade the whole system even if everything else is working fine.
 
 ---
 
