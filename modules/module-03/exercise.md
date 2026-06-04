@@ -101,8 +101,8 @@ curl http://localhost:8000/v1/activities
 
 ## Minimum to submit this branch
 
-- [ ] `activity-service` validates users and enriches with game data
-- [ ] Graceful degradation works: activity saved even when `game-service` is down
+- [x] `activity-service` validates users and enriches with game data
+- [x] Graceful degradation works: activity saved even when `game-service` is down
 - [ ] Gateway running on port 8000, routing to all three services
 - [ ] `curl http://localhost:8000/health` returns `{"status": "ok"}`
 - [ ] `REFLECTION.md` completed and committed
