@@ -16,17 +16,13 @@ def create(db: Session, data: ActivityCreate) -> Activity:
     return activity
 
 
-def list_activities(
-    db: Session, limit: int = 20, offset: int = 0
-) -> tuple[list[Activity], int]:
+def list_activities(db: Session, limit: int = 20, offset: int = 0) -> tuple[list[Activity], int]:
     total = db.query(Activity).count()
     items = db.query(Activity).order_by(Activity.created_at.desc()).offset(offset).limit(limit).all()
     return items, total
 
 
-def list_by_user(
-    db: Session, user_id: str, limit: int = 20, offset: int = 0
-) -> tuple[list[Activity], int]:
+def list_by_user(db: Session, user_id: str, limit: int = 20, offset: int = 0) -> tuple[list[Activity], int]:
     q = db.query(Activity).filter(Activity.user_id == user_id)
     total = q.count()
     items = q.order_by(Activity.created_at.desc()).offset(offset).limit(limit).all()
