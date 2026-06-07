@@ -8,12 +8,14 @@ import app.repository as activity_repo
 
 from app.infrastructure.rabbitmq_publisher import publish_activity_event
 
+import os
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="activity-service", version="1.0.0")
 
-USER_SERVICE_URL = "http://localhost:8001"
-GAME_SERVICE_URL = "http://localhost:8002"
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://localhost:8001")
+GAME_SERVICE_URL = os.getenv("GAME_SERVICE_URL", "http://localhost:8002")
 
 
 
