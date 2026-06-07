@@ -1,0 +1,74 @@
+version: "3.9"
+
+networks:
+  gamehub:
+    name: gamehub
+
+services:
+
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "8001:8001"
+    networks:
+      - gamehub
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  game-service:
+    build: ./services/game-service
+    ports:
+      - "8002:8002"
+    networks:
+      - gamehub
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  activity-service:
+    build: ./services/activity-service
+    ports:
+      - "8003:8003"
+    networks:
+      - gamehub
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - USER_SERVICE_URL=http://user-service:8001
+      - GAME_SERVICE_URL=http://game-service:8002
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build: ./services/notification-service
+    ports:
+      - "8004:8004"
+    networks:
+      - gamehub
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  gateway:
+    build: ./services/gateway
+    ports:
+      - "8000:8000"
+    networks:
+      - gamehub
+    environment:
+      - USER_SERVICE_URL=http://user-service:8001
+      - GAME_SERVICE_URL=http://game-service:8002
+      - ACTIVITY_SERVICE_URL=http://activity-service:8003
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8004
+    depends_on:
+      - user-service
+      - game-service
+      - activity-service
+      - notification-service

@@ -6,12 +6,16 @@ from app.database import Base, engine, get_db
 from app.schemas import ActivityCreate
 import app.repository as activity_repo
 
+from app.infrastructure.rabbitmq_publisher import publish_activity_event
+
+import os
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="activity-service", version="1.0.0")
 
-USER_SERVICE_URL = "http://localhost:8001"
-GAME_SERVICE_URL = "http://localhost:8002"
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://localhost:8001")
+GAME_SERVICE_URL = os.getenv("GAME_SERVICE_URL", "http://localhost:8002")
 
 
 
@@ -73,6 +77,15 @@ async def create_activity(
     await validate_user(str(payload.user_id))
     activity = activity_repo.create(db, payload)
     game = await fetch_game(str(payload.game_id))
+    game_title = game["title"] if game else None
+
+    await publish_activity_event(
+        user_id = str(payload.user_id),
+        game_id = str(payload.game_id),
+        action = payload.action,
+        game_title = game_title
+    )
+
     return _serialize(activity, game)
 
 

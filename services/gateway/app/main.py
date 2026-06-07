@@ -6,9 +6,10 @@ from app.config import settings
 app = FastAPI(title="gateway", version="1.0.0")
 
 ROUTES: dict[str, str] = {
-    "users":      settings.user_service_url,
-    "games":      settings.game_service_url,
-    "activities": settings.activity_service_url,
+    "users":         settings.user_service_url,
+    "games":         settings.game_service_url,
+    "activities":    settings.activity_service_url,
+    "notifications": settings.notification_service_url,  # Added in Module 4
 }
 
 
@@ -48,6 +49,7 @@ async def proxy(request: Request, path: str):
             headers=dict(response.headers),
             media_type=response.headers.get("content-type"),
         )
+
     # Step 4 — handle unreachable service
     except httpx.RequestError:
         return Response(status_code=503, content="Service unavailable")
