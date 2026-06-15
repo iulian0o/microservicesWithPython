@@ -9,12 +9,13 @@
 # IMPORTANT: declare /search BEFORE /{game_id} in your router.
 # If /{game_id} comes first, FastAPI will try to match "search" as an ID
 # and return a 422 Unprocessable Entity error.
-<<<<<<< HEAD
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import service, schemas
+from app.infrastructure.cache import get_game_summary
+
 
 router = APIRouter(prefix="/v1/games", tags=["games"])
 
@@ -36,9 +37,14 @@ def get_game(game_id: str, db: Session = Depends(get_db)):
         return service.fetch_game(db, game_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-=======
 #
 # Module 5 — CQRS: also add this endpoint (declare it before /{game_id}):
 # - GET /v1/games/{game_id}/summary -> read from Redis cache (404 if not cached)
 #   from app.infrastructure.cache import get_game_summary
->>>>>>> edcd48e1a2a7c6fcff9913d6467bc578de3d48c8
+
+@router.get("/v1/games/{game_id}/summary")
+def get_summary(game_id: str):
+    data = get_game_summary(game_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Summary not found in cache")
+    return data
