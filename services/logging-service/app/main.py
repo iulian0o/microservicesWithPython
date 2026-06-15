@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 
 from app.models import ActivityLog, Consent, db
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -40,65 +41,76 @@ def health():
 
 @app.post("/v1/consent/<user_id>")
 def set_consent(user_id):
-    """
-    Record or update a user's GDPR consent decision.
+    body = request.get_json(force=True)
+    granted = body.get("granted", False)
 
-    Request body: { "granted": true }
+    record = Consent.query.get(user_id)
+    if record is None:
+        record = Consent(user_id=user_id)
+        db.session.add(record)
 
-    Steps:
-    1. Parse request.get_json() to get "granted" (bool)
-    2. Look up or create a Consent row for user_id
-    3. Set granted and updated_at, then db.session.commit()
-    4. Return 200 with { "user_id", "granted", "updated_at" }
-    """
-    raise NotImplementedError
+    record.granted = granted
+    record.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+
+    return jsonify({
+        "user_id": record.user_id,
+        "granted": record.granted,
+        "updated_at": record.updated_at.isoformat(),
+    }), 200
 
 
 @app.get("/v1/consent/<user_id>")
 def get_consent(user_id):
-    """
-    Check a user's current consent status.
+    record = Consent.query.get(user_id)
+    if record is None:
+        return jsonify({"detail": "No consent record found"}), 404
 
-    Steps:
-    1. Query Consent by user_id
-    2. If not found → 404 with { "detail": "No consent record found" }
-    3. Otherwise → 200 with { "user_id", "granted", "updated_at" }
-    """
-    raise NotImplementedError
+    return jsonify({
+        "user_id": record.user_id,
+        "granted": record.granted,
+        "updated_at": record.updated_at.isoformat(),
+    }), 200
 
 
 @app.delete("/v1/consent/<user_id>")
 def withdraw_consent(user_id):
-    """
-    Withdraw consent — sets granted to False (does not delete the record).
+    record = Consent.query.get(user_id)
+    if record is None:
+        return jsonify({"detail": "No consent record found"}), 404
 
-    Steps:
-    1. Look up the Consent row; 404 if missing
-    2. Set granted=False, update updated_at, commit
-    3. Return 200 with { "user_id", "granted", "updated_at" }
-    """
-    raise NotImplementedError
+    record.granted = False
+    record.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+
+    return jsonify({
+        "user_id": record.user_id,
+        "granted": record.granted,
+        "updated_at": record.updated_at.isoformat(),
+    }), 200
 
 
 @app.delete("/v1/logs/<user_id>")
 def delete_logs(user_id):
-    """
-    GDPR right to erasure — permanently delete all log entries for a user.
-
-    Steps:
-    1. Delete all ActivityLog rows where user_id matches
-    2. Commit
-    3. Return 200 with { "user_id", "deleted_entries": <count> }
-    """
-    raise NotImplementedError
+    deleted = ActivityLog.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    return jsonify({"user_id": user_id, "deleted_entries": deleted}), 200
 
 
 @app.get("/v1/logs/<user_id>")
 def get_logs(user_id):
-    """
-    List all stored log entries for a user (for testing/verification).
-
-    Returns: { "items": [...], "total": N }
-    Each item: { "id", "user_id", "game_id", "action", "message", "created_at" }
-    """
-    raise NotImplementedError
+    logs = ActivityLog.query.filter_by(user_id=user_id).all()
+    return jsonify({
+        "items": [
+            {
+                "id": log.id,
+                "user_id": log.user_id,
+                "game_id": log.game_id,
+                "action": log.action,
+                "message": log.message,
+                "created_at": log.created_at.isoformat(),
+            }
+            for log in logs
+        ],
+        "total": len(logs),
+    }), 200
