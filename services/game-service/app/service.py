@@ -8,16 +8,25 @@
 # - fetch_game(db, game_id) -> GameOut        (raises ValueError if not found)
 # - fetch_all_games(db, limit, offset) -> GameList
 # - find_games(db, q, limit, offset) -> GameList   (delegates to search_games in repository)
-<<<<<<< HEAD
 
 from sqlalchemy.orm import Session
 from app import repository
 from sqlalchemy.exc import IntegrityError
 from app.schemas import GameCreate, GameOut, GameList
 from fastapi import HTTPException
+from app.infrastructure.cache import set_game_summary 
 
 def add_game(db: Session, data: GameCreate) -> GameOut:
     game = repository.create_game(db, data)
+
+    set_game_summary(game.id, {
+        "id":        game.id,
+        "title":     game.title,
+        "genre":     game.genre,
+        "platform":  game.platform,
+        "cover_url": game.cover_url,
+    })
+
     return GameOut.model_validate(game)
 
 def add_user(db: Session, data: GameCreate) -> GameOut:
@@ -53,7 +62,6 @@ def find_games(db: Session, q: str, limit: int = 20, offset: int = 0) -> GameLis
         limit=limit,
         offset=offset,
     )
-=======
 #
 # Module 5 — CQRS:
 # In add_game(), after saving to the DB, also write to the Redis cache:
@@ -61,4 +69,3 @@ def find_games(db: Session, q: str, limit: int = 20, offset: int = 0) -> GameLis
 #   set_game_summary(game.id, {"id": game.id, "title": game.title,
 #                               "genre": game.genre, "platform": game.platform,
 #                               "cover_url": game.cover_url})
->>>>>>> edcd48e1a2a7c6fcff9913d6467bc578de3d48c8

@@ -31,6 +31,13 @@ def list_games(limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
 def search_games(q: str, limit: int = 20, offset: int = 0, db: Session = Depends(get_db)):
     return service.find_games(db, q=q, limit=limit, offset=offset)
 
+@router.get("/{game_id}/summary")
+def get_summary(game_id: str):
+    data = get_game_summary(game_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Summary not found in cache")
+    return data
+
 @router.get("/{game_id}", response_model=schemas.GameOut)
 def get_game(game_id: str, db: Session = Depends(get_db)):
     try:
@@ -42,9 +49,3 @@ def get_game(game_id: str, db: Session = Depends(get_db)):
 # - GET /v1/games/{game_id}/summary -> read from Redis cache (404 if not cached)
 #   from app.infrastructure.cache import get_game_summary
 
-@router.get("/v1/games/{game_id}/summary")
-def get_summary(game_id: str):
-    data = get_game_summary(game_id)
-    if data is None:
-        raise HTTPException(status_code=404, detail="Summary not found in cache")
-    return data
