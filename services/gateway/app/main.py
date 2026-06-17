@@ -41,19 +41,13 @@ async def proxy(request: Request, path: str):
     # JWT validation — skip only for the public token endpoint.
     if path not in PUBLIC_PATHS:
         auth_header = request.headers.get("authorization")
-        print("AUTH HEADER:", repr(auth_header))
         if not auth_header or not auth_header.startswith("Bearer "):
-            print("REJECT: missing or malformed header")
             return Response(status_code=401, content="Missing or invalid token")
 
         token = auth_header.split(" ", 1)[1]
-        print("TOKEN:", repr(token))
-        print("SECRET:", repr(settings.secret_key), "ALGO:", repr(settings.algorithm))
         try:
-            decoded = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            print("DECODED OK:", decoded)
-        except JWTError as e:
-            print("JWT ERROR:", repr(e))
+            jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        except JWTError:
             return Response(status_code=401, content="Missing or invalid token")
 
     target_url = f"{target_base}/{path}"
