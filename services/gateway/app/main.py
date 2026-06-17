@@ -35,11 +35,15 @@ async def proxy(request: Request, path: str):
     resource = segments[1]
     target_base = ROUTES.get(resource)
 
+    print(f"DEBUG path={path!r} resource={resource!r} target_base={target_base!r}")
+
     if target_base is None:
         return Response(status_code=404, content=f"Unknown resource: {resource}")
 
     # JWT validation — skip only for the public token endpoint.
     if path not in PUBLIC_PATHS:
+        auth_header = request.headers.get("authorization")
+        print(f"DEBUG auth_header={auth_header!r}")
         auth_header = request.headers.get("authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return Response(status_code=401, content="Missing or invalid token")
