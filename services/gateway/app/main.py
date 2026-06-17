@@ -1,51 +1,33 @@
 import httpx
 from fastapi import FastAPI, Request, Response
+from jose import JWTError, jwt
 
 from app.config import settings
 
 app = FastAPI(title="gateway", version="1.0.0")
 
-# Routing table — maps the resource name in the URL path to the target service base URL.
-# Path structure: /{version}/{resource}/...
-#   e.g. GET /v1/users/123  →  resource = "users"  →  forward to user_service_url
-#
-# Add new entries here as each module introduces a new service.
-# Module 4 will add: "notifications"
-# Module 5 will add: "consent", "logs"
-# Module 6 will add: "auth"
 ROUTES: dict[str, str] = {
     "users":      settings.user_service_url,
     "games":      settings.game_service_url,
     "activities": settings.activity_service_url,
-    # Added in Module 4
     "notifications": settings.notification_service_url,
-    # Added in Module 5
     "consent": settings.logging_service_url,
     "logs": settings.logging_service_url,
+    # Added in Module 6
+    "auth": settings.auth_service_url,
 }
+
+# Paths that must remain public — no token required.
+PUBLIC_PATHS = {"v1/auth/token"}
 
 
 @app.get("/health")
 async def health():
-    """
-    Gateway liveness check. Handled here — never forwarded to a service.
-    In Module 10 this endpoint will be upgraded to fan out to all services
-    and return their individual status.
-    """
     return {"status": "ok", "service": "gateway"}
 
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 async def proxy(request: Request, path: str):
-
-    """
-    Verify your implementation:
-        curl http://localhost:8000/health
-        curl http://localhost:8000/v1/users
-        curl http://localhost:8000/v1/games
-        curl http://localhost:8000/v1/activities
-        curl http://localhost:8000/v1/unknown   # should return 404
-    """
     segments = path.split("/")
     if len(segments) < 2:
         return Response(status_code=404, content="Not found")
@@ -55,6 +37,24 @@ async def proxy(request: Request, path: str):
 
     if target_base is None:
         return Response(status_code=404, content=f"Unknown resource: {resource}")
+
+    # JWT validation — skip only for the public token endpoint.
+    if path not in PUBLIC_PATHS:
+        auth_header = request.headers.get("authorization")
+        print("AUTH HEADER:", repr(auth_header))
+        if not auth_header or not auth_header.startswith("Bearer "):
+            print("REJECT: missing or malformed header")
+            return Response(status_code=401, content="Missing or invalid token")
+
+        token = auth_header.split(" ", 1)[1]
+        print("TOKEN:", repr(token))
+        print("SECRET:", repr(settings.secret_key), "ALGO:", repr(settings.algorithm))
+        try:
+            decoded = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            print("DECODED OK:", decoded)
+        except JWTError as e:
+            print("JWT ERROR:", repr(e))
+            return Response(status_code=401, content="Missing or invalid token")
 
     target_url = f"{target_base}/{path}"
 
